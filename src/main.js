@@ -12,6 +12,9 @@ if (window.location.pathname === '/admin/categories') {
   await import('./admin/categories.js')
 
 
+} else if (window.location.pathname === '/admin/reviews') {
+  await import('./admin/reviews.js')
+
 } else if (window.location.pathname === '/admin/apps') {
 
   await import('./admin/apps.js')
