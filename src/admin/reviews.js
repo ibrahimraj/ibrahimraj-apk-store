@@ -20,20 +20,21 @@ const escapeHTML = (value = '') => String(value).replace(/[&<>"']/g, char => ({
 })[char])
 
 async function initReviews() {
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } =
+    await supabase.auth.getUser()
 
   if (authError || !user) {
     window.location.href = '/admin/login'
     return
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'admin') {
+  if (error || !profile || profile.role !== 'admin') {
     window.location.href = '/admin/login'
     return
   }
@@ -153,7 +154,6 @@ function renderLayout() {
           </div>
 
         </section>
-
       </main>
     </div>
   `
@@ -192,7 +192,10 @@ function renderLayout() {
 
 async function loadReviews() {
   const message = document.getElementById('reviewsMessage')
+  const tbody = document.getElementById('reviewsTableBody')
+
   message.textContent = 'Loading reviews...'
+  tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>'
 
   const { data, error } = await supabase
     .from('reviews')
@@ -201,12 +204,10 @@ async function loadReviews() {
       app_id,
       user_id,
       rating,
-      title,
       comment,
       status,
       created_at,
-      apps(name),
-      profiles(full_name, email)
+      apps(name)
     `)
     .order('created_at', { ascending: false })
 
@@ -218,27 +219,69 @@ async function loadReviews() {
     return
   }
 
-  allReviews = data || []
+  const reviews = data || []
+
+  const userIds = [
+    ...new Set(reviews.map(review => review.user_id).filter(Boolean))
+  ]
+
+  let profilesMap = {}
+
+  if (userIds.length > 0) {
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, display_name')
+      .in('id', userIds)
+
+    if (profileError) {
+      message.textContent =
+        'Could not load reviewer names: ' + profileError.message
+    } else {
+      profilesMap = Object.fromEntries(
+        (profiles || []).map(profile => [
+          profile.id,
+          profile.display_name
+        ])
+      )
+    }
+  }
+
+  allReviews = reviews.map(review => ({
+    ...review,
+    profiles: {
+      display_name: profilesMap[review.user_id] || 'User'
+    }
+  }))
 
   updateStats()
   renderReviews()
 
-  message.textContent = allReviews.length
-    ? ''
-    : 'No reviews found.'
+  if (!message.textContent.startsWith('Could not load')) {
+    message.textContent = allReviews.length
+      ? ''
+      : 'No reviews found.'
+  }
 }
 
 function updateStats() {
   const total = allReviews.length
-  const pending = allReviews.filter(r => r.status === 'pending').length
-  const published = allReviews.filter(r => r.status === 'published').length
+
+  const pending = allReviews.filter(
+    r => r.status === 'pending'
+  ).length
+
+  const published = allReviews.filter(
+    r => r.status === 'published'
+  ).length
 
   const ratings = allReviews
     .map(r => Number(r.rating))
     .filter(r => r >= 1 && r <= 5)
 
   const average = ratings.length
-    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+    ? (
+        ratings.reduce((a, b) => a + b, 0) / ratings.length
+      ).toFixed(1)
     : '0.0'
 
   document.getElementById('totalReviews').textContent = total
@@ -250,23 +293,24 @@ function updateStats() {
 function renderReviews() {
   const tbody = document.getElementById('reviewsTableBody')
 
-  let filtered = allReviews.filter(review => {
+  const filtered = allReviews.filter(review => {
     const statusMatch =
       currentFilter === 'all' ||
       review.status === currentFilter
 
     const searchText = [
       review.apps?.name,
-      review.profiles?.full_name,
-      review.profiles?.email,
-      review.title,
+      review.profiles?.display_name,
       review.comment
     ].join(' ').toLowerCase()
 
     return statusMatch && searchText.includes(searchTerm)
   })
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / PAGE_SIZE)
+  )
 
   if (currentPage > totalPages) currentPage = totalPages
 
@@ -285,40 +329,46 @@ function renderReviews() {
         ? new Date(review.created_at).toLocaleDateString()
         : '—'
 
-      const rating = Math.max(0, Math.min(5, Number(review.rating) || 0))
+      const rating = Math.max(
+        0,
+        Math.min(5, Number(review.rating) || 0)
+      )
+
+      const status = review.status || 'pending'
 
       return `
         <tr>
           <td>${escapeHTML(review.apps?.name || 'Unknown App')}</td>
 
           <td>
-            ${escapeHTML(review.profiles?.full_name || 'User')}
-            <small>${escapeHTML(review.profiles?.email || '')}</small>
+            ${escapeHTML(review.profiles?.display_name || 'User')}
           </td>
 
-          <td class="review-rating">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</td>
+          <td class="review-rating">
+            ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}
+          </td>
 
           <td>
-            <strong>${escapeHTML(review.title || '')}</strong>
-            <p>${escapeHTML(review.comment || '')}</p>
+            <p>${escapeHTML(review.comment || 'No comment')}</p>
           </td>
 
           <td>${escapeHTML(date)}</td>
 
           <td>
-            <span class="review-status status-${escapeHTML(review.status || 'pending')}">
-              ${escapeHTML(review.status || 'pending')}
+            <span class="review-status status-${escapeHTML(status)}">
+              ${escapeHTML(status)}
             </span>
           </td>
 
           <td>
             <div class="review-actions">
-              ${review.status !== 'published'
+              ${status !== 'published'
                 ? `<button data-action="published" data-id="${escapeHTML(review.id)}">Approve</button>`
                 : `<button data-action="hidden" data-id="${escapeHTML(review.id)}">Hide</button>`
               }
 
-              <button class="delete-review"
+              <button
+                class="delete-review"
                 data-action="delete"
                 data-id="${escapeHTML(review.id)}">
                 Delete
@@ -333,8 +383,11 @@ function renderReviews() {
   document.getElementById('pageInfo').textContent =
     `Page ${currentPage} of ${totalPages}`
 
-  document.getElementById('prevPage').disabled = currentPage <= 1
-  document.getElementById('nextPage').disabled = currentPage >= totalPages
+  document.getElementById('prevPage').disabled =
+    currentPage <= 1
+
+  document.getElementById('nextPage').disabled =
+    currentPage >= totalPages
 
   tbody.querySelectorAll('button[data-action]').forEach(button => {
     button.onclick = () => handleReviewAction(
@@ -346,7 +399,9 @@ function renderReviews() {
 
 async function handleReviewAction(id, action) {
   if (action === 'delete') {
-    if (!confirm('Are you sure you want to delete this review?')) return
+    if (!confirm('Are you sure you want to delete this review?')) {
+      return
+    }
 
     const { error } = await supabase
       .from('reviews')
