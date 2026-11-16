@@ -16,6 +16,9 @@ if (window.location.pathname === '/admin/categories') {
 
   await import('./admin/apps.js')
 
+} else if (window.location.pathname === '/admin/downloads') {
+  await import('./admin/downloads.js')
+
 
 } else if (window.location.pathname === '/admin/dashboard') {
 
