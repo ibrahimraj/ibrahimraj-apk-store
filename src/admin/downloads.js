@@ -1,5 +1,5 @@
-
 import { supabase } from '../supabase.js'
+import './apps.css'
 import './downloads.css'
 
 const app = document.querySelector('#app')

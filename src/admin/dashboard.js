@@ -19,7 +19,7 @@ app.innerHTML = `
         <a href="/admin/dashboard" class="active">▦ Dashboard</a>
         <a href="/admin/apps">▣ Applications</a>
        <a href="/admin/categories">▤ Categories</a>
-        <a href="#downloads">⇩ Downloads</a>
+        <a href="/admin/downloads">⇩ Downloads</a>
         <a href="#reviews">☆ Reviews</a>
         <a href="#users">♙ Users</a>
       </nav>
