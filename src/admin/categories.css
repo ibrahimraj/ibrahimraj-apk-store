@@ -1,0 +1,25 @@
+
+@import './apps.css';
+
+.category-description {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+
+#categoriesTable td strong {
+  color: #f0f6f0;
+}
+
+#categoryEditor[hidden] {
+  display: none !important;
+}
+
+#categoryForm .app-form-message {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  #categoryEditor {
+    padding: 14px;
+  }
+}
