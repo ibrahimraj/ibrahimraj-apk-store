@@ -1,30 +1,29 @@
-
 import { supabase } from './supabase.js'
 import './style.css'
 
 
 // ==========================================
-// ADMIN ROUTES
+// ADMIN ROUTES — KEEP UNCHANGED
 // ==========================================
 
-if (window.location.pathname === '/admin/categories') {
 
+if (window.location.pathname === '/admin/categories') {
   await import('./admin/categories.js')
 
 
 } else if (window.location.pathname === '/admin/reviews') {
   await import('./admin/reviews.js')
 
-} else if (window.location.pathname === '/admin/apps') {
 
+} else if (window.location.pathname === '/admin/apps') {
   await import('./admin/apps.js')
+
 
 } else if (window.location.pathname === '/admin/downloads') {
   await import('./admin/downloads.js')
 
 
 } else if (window.location.pathname === '/admin/dashboard') {
-
   await import('./admin/dashboard.js')
 
 
@@ -33,727 +32,522 @@ if (window.location.pathname === '/admin/categories') {
   window.location.pathname === '/admin/' ||
   window.location.pathname === '/admin/login'
 ) {
-
   await import('./admin/login.js')
 
 
 } else {
 
 
-  // ==========================================
-  // HELPERS
-  // ==========================================
-
-  const escapeHTML = (value = '') => {
-
-    return String(value).replace(/[&<>"']/g, char => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    })[char])
-
-  }
+// ==========================================
+// APPNEXA PUBLIC STORE
+// ==========================================
 
 
-  const getInitials = (name = 'IR') => {
-
-    return String(name)
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map(word => word[0] || '')
-      .join('')
-      .toUpperCase()
-
-  }
+const root = document.querySelector('#app')
 
 
-  const safeURL = (url) => {
+const BRAND = 'APPNEXA'
+const OWNER = 'By IbrahimRaj'
 
-    try {
 
-      const parsed = new URL(url)
+let apps = []
+let categories = []
+let versions = []
+let selectedCategory = 'All Apps'
 
-      if (
-        parsed.protocol === 'https:' ||
-        parsed.protocol === 'http:'
-      ) {
-        return parsed.href
-      }
 
-    } catch (error) {
+const escapeHTML = (value = '') =>
+  String(value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  })[char])
 
-      return ''
 
+const safeURL = value => {
+  try {
+    const url = new URL(value)
+
+
+    if (
+      url.protocol === 'https:' ||
+      url.protocol === 'http:'
+    ) {
+      return url.href
     }
-
+  } catch (error) {
     return ''
-
   }
 
 
-  // ==========================================
-  // PAGE LAYOUT
-  // ==========================================
+  return ''
+}
 
-  document.querySelector('#app').innerHTML = `
 
-    <header class="navbar">
+const getInitials = (name = 'A') =>
+  String(name)
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(word => word[0] || '')
+    .join('')
+    .toUpperCase()
 
-      <a href="#" class="brand">
 
-        <span class="brand-icon">IR</span>
+// ==========================================
+// VERSION HELPERS
+// ==========================================
 
-        <span>
-          Ibrahim<span class="green">Raj</span>
+
+const getAppVersions = appId =>
+  versions
+    .filter(v => String(v.app_id) === String(appId))
+    .sort((a, b) => Number(b.version_code || 0) - Number(a.version_code || 0))
+
+
+const getVersion = appId =>
+  getAppVersions(appId)[0] || null
+
+
+const formatPublishDate = value => {
+  if (!value) return 'Publish date unavailable'
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Publish date unavailable'
+  }
+
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+
+const getCategory = app => {
+  const category = categories.find(
+    c => String(c.id) === String(app.category_id)
+  )
+
+
+  return category
+    ? category.name || category.category_name || category.title || category.slug || 'Other'
+    : app.category_name || 'Other'
+}
+
+
+const getAppLink = app =>
+  `?app=${encodeURIComponent(app.slug || app.id)}`
+
+
+const getIcon = app => {
+  const url = safeURL(app.icon_url)
+
+
+  if (url) {
+    return `
+      <img
+        src="${escapeHTML(url)}"
+        alt="${escapeHTML(app.name)}"
+        onerror="this.style.display='none'"
+      >
+    `
+  }
+
+
+  return `<span>${escapeHTML(getInitials(app.name))}</span>`
+}
+
+
+// ==========================================
+// HEADER
+// ==========================================
+
+
+function renderHeader() {
+  return `
+    <header class="nx-header">
+      <a href="/" class="nx-brand">
+        <span class="nx-brand-icon">A</span>
+        <span class="nx-brand-name">
+          APP<span>NEXA</span>
+          <small>BY IBRAHIMRAJ</small>
         </span>
-
       </a>
 
 
-      <nav class="nav-links">
-
-        <a href="#home">Home</a>
-        <a href="#apps">Explore Apps</a>
-        <a href="#categories">Categories</a>
-        <a href="#about">About</a>
-
+      <nav class="nx-nav">
+        <a href="/">Home</a>
+        <a href="/#collections">Explore</a>
+        <a href="/#categories">Categories</a>
       </nav>
 
 
-      <a href="#apps" class="nav-button">
+      <a href="/#apps" class="nx-header-button">
         Explore Store ↗
       </a>
-
     </header>
+  `
+}
 
 
-    <main>
+// ==========================================
+// FOOTER
+// ==========================================
 
 
-      <section class="hero" id="home">
+function renderFooter() {
+  return `
+    <footer class="nx-footer">
+      <div class="nx-footer-brand">
+        <span class="nx-brand-icon">A</span>
+        <div>
+          <strong>APPNEXA</strong>
+          <small>By IbrahimRaj</small>
+        </div>
+      </div>
 
-        <div class="hero-content">
+
+      <p>
+        © 2026 APPNEXA. All rights reserved.
+      </p>
 
 
-          <span class="eyebrow">
-            ✦ INDEPENDENT ANDROID APP MARKETPLACE
+      <a href="mailto:support@ibrahimraj.org">
+        Contact
+      </a>
+    </footer>
+  `
+}
+
+
+// ==========================================
+// LOAD DATABASE
+// ==========================================
+
+
+async function loadStoreData() {
+  const [appResult, categoryResult, versionResult] =
+    await Promise.all([
+      supabase
+        .from('apps')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false }),
+
+
+      supabase
+        .from('categories')
+        .select('*'),
+
+
+      supabase
+        .from('app_versions')
+        .select('*')
+        .eq('status', 'published')
+        .order('version_code', { ascending: false })
+    ])
+
+
+  if (appResult.error) {
+    console.error('Apps error:', appResult.error)
+    throw appResult.error
+  }
+
+
+  apps = appResult.data || []
+  categories = categoryResult.data || []
+  versions = versionResult.data || []
+
+
+  if (categoryResult.error) {
+    console.warn('Categories error:', categoryResult.error)
+  }
+
+
+  if (versionResult.error) {
+    console.warn('Versions error:', versionResult.error)
+  }
+}
+
+
+// ==========================================
+// APP CARD — ICON + NAME ONLY
+// ==========================================
+
+
+function renderAppCard(app) {
+  return `
+    <a
+      href="${escapeHTML(getAppLink(app))}"
+      class="nx-app-card"
+      title="${escapeHTML(app.name)}"
+    >
+      <div class="nx-app-icon">
+        ${getIcon(app)}
+      </div>
+
+
+      <span class="nx-app-name">
+        ${escapeHTML(app.name)}
+      </span>
+    </a>
+  `
+}
+
+
+// ==========================================
+// COLLECTION
+// ==========================================
+
+
+function renderCollection(title, subtitle, items, id = '') {
+  if (!items.length) return ''
+
+
+  return `
+    <section class="nx-collection" ${id ? `id="${id}"` : ''}>
+      <div class="nx-section-heading">
+        <div>
+          <h2>${escapeHTML(title)}</h2>
+          <p>${escapeHTML(subtitle)}</p>
+        </div>
+      </div>
+
+
+      <div class="nx-app-grid">
+        ${items.map(renderAppCard).join('')}
+      </div>
+    </section>
+  `
+}
+
+
+// ==========================================
+// HOMEPAGE
+// ==========================================
+
+
+function renderHome() {
+  const featuredApps = apps.filter(app => app.is_featured)
+  const newestApps = apps.slice(0, 8)
+
+
+  const verifiedApps = apps.filter(app =>
+    app.is_verified === true || app.verified === true
+  )
+
+
+  const collectionApps = apps
+
+
+  root.innerHTML = `
+    ${renderHeader()}
+
+
+    <main class="nx-home">
+
+
+      <section class="nx-hero">
+        <div class="nx-hero-content">
+
+
+          <span class="nx-eyebrow">
+            ✦ YOUR ANDROID APP DESTINATION
           </span>
 
 
           <h1>
             Discover Apps.<br>
-            <span class="green">Experience More.</span>
+            <span>Experience More.</span>
           </h1>
 
 
           <p>
             Explore useful Android applications,
-            smart tools and innovative software
-            developed by IbrahimRaj.
+            smart tools and digital experiences
+            in one place.
           </p>
 
 
-          <div class="hero-actions">
-
-            <a href="#apps" class="primary-button">
-              Explore Applications ↗
-            </a>
-
-
-            <a href="#about" class="secondary-button">
-              About IbrahimRaj
-            </a>
-
-          </div>
-
-
-          <div class="hero-info">
-
-            <span>✓ Independent Developer</span>
-            <span>✓ Android Applications</span>
-            <span>✓ Regular Updates</span>
-
-          </div>
-
-
-        </div>
-
-
-        <div class="hero-decoration">
-
-          <div class="orbit orbit-one"></div>
-          <div class="orbit orbit-two"></div>
-
-          <div class="hero-logo">IR</div>
-
-          <span class="floating-tag">
-            ANDROID APPS
-          </span>
-
-        </div>
-
-      </section>
-
-
-      <section class="apps-section" id="apps">
-
-
-        <div class="search-box">
-
-          <span>⌕</span>
-
-          <input
-            id="searchInput"
-            type="search"
-            placeholder="Search applications..."
-          >
-
-        </div>
-
-
-        <div class="category-list" id="categories">
-
-          <button
-            class="category-btn active"
-            data-category="All Apps">
-
-            All Apps
-
-          </button>
-
-        </div>
-
-
-        <div class="app-grid" id="appGrid"></div>
-
-
-        <p class="empty-state" id="emptyState" hidden>
-          No applications found. Try another search.
-        </p>
-
-
-      </section>
-
-
-      <section class="featured-section">
-
-        <div class="featured-content">
-
-
-          <span class="eyebrow">
-            OUR MISSION
-          </span>
-
-
-          <h2>
-            Technology made simple.
-          </h2>
-
-
-          <p>
-            IbrahimRaj is an independent software brand
-            focused on building useful Android applications
-            and practical digital tools.
-          </p>
-
-
-          <a href="#about" class="primary-button">
-            Discover Our Story ↗
+          <a href="#collections" class="nx-primary-button">
+            Explore Applications ↗
           </a>
 
 
+          <div class="nx-hero-caption">
+            <span>✓ Curated Applications</span>
+            <span>✓ Regular Updates</span>
+            <span>✓ By IbrahimRaj</span>
+          </div>
+
+
         </div>
+
+
+        <div class="nx-hero-art">
+          <div class="nx-hero-orbit"></div>
+          <div class="nx-hero-symbol">A</div>
+          <span>APPNEXA</span>
+        </div>
+      </section>
+
+
+      <section class="nx-store-content" id="collections">
+
+
+        <div class="nx-search">
+          <span>⌕</span>
+          <input
+            id="nxSearch"
+            type="search"
+            placeholder="Search apps..."
+          >
+        </div>
+
+
+        <div class="nx-category-area" id="categories">
+          <div class="nx-category-list" id="nxCategories">
+            <button class="nx-category active" data-category="All Apps">
+              All Apps
+            </button>
+          </div>
+        </div>
+
+
+        <div id="nxSearchResults" hidden>
+          <div class="nx-section-heading">
+            <div>
+              <h2>Search Results</h2>
+              <p>Applications matching your search</p>
+            </div>
+          </div>
+
+
+          <div class="nx-app-grid" id="nxSearchGrid"></div>
+          <p class="nx-empty" id="nxSearchEmpty" hidden>
+            No applications found.
+          </p>
+        </div>
+
+
+        <div id="nxCollections">
+
+
+          ${renderCollection(
+            "Editor's Choice",
+            'Selected applications from APPNEXA',
+            featuredApps
+          )}
+
+
+          ${renderCollection(
+            'Verified Apps',
+            'Applications marked as verified',
+            verifiedApps
+          )}
+
+
+          ${renderCollection(
+            'Newly Published',
+            'Discover the latest applications',
+            newestApps
+          )}
+
+
+          ${renderCollection(
+            'Explore All Apps',
+            'Find your next favourite application',
+            collectionApps,
+            'apps'
+          )}
+
+
+        </div>
+
+
+        ${apps.length === 0 ? `
+          <p class="nx-empty">
+            No applications have been published yet.
+          </p>
+        ` : ''}
+
 
       </section>
 
 
-      <section class="about" id="about">
-
-
-        <span class="eyebrow">
-          ABOUT IBRAHIMRAJ
-        </span>
+      <section class="nx-brand-story">
+        <span class="nx-eyebrow">OUR MISSION</span>
 
 
         <h2>
-          Built with passion.<br>
-          <span class="green">Made for everyone.</span>
+          Technology made simple.
         </h2>
 
 
         <p>
-          Our mission is to create simple, useful and
-          reliable digital applications for Android users.
+          APPNEXA is an independent Android app marketplace
+          created by IbrahimRaj to make discovering
+          useful applications easier.
         </p>
-
-
       </section>
 
 
     </main>
 
 
-    <footer>
-
-
-      <div class="footer-brand">
-
-        <span class="brand-icon">IR</span>
-
-        <strong>
-          Ibrahim<span class="green">Raj</span>
-        </strong>
-
-      </div>
-
-
-      <p>
-        © 2026 IbrahimRaj APK Store. All rights reserved.
-      </p>
-
-
-      <div class="footer-links">
-
-        <a href="#about">About</a>
-        <a href="#apps">Applications</a>
-        <a href="mailto:support@ibrahimraj.org">Contact</a>
-
-      </div>
-
-
-    </footer>
-
-
-    <div class="modal-overlay" id="appModal" hidden>
-
-
-      <div class="modal">
-
-
-        <button class="modal-close" id="closeModal">
-          ×
-        </button>
-
-
-        <div id="modalContent"></div>
-
-
-      </div>
-
-
-    </div>
-
+    ${renderFooter()}
   `
 
 
-  // ==========================================
-  // ELEMENTS
-  // ==========================================
+  setupHomeEvents()
+}
 
-  const appGrid = document.querySelector('#appGrid')
 
-  const searchInput = document.querySelector('#searchInput')
+// ==========================================
+// HOMEPAGE EVENTS
+// ==========================================
 
-  const emptyState = document.querySelector('#emptyState')
 
-  const categoryList = document.querySelector('#categories')
+function setupHomeEvents() {
+  const search = document.querySelector('#nxSearch')
+  const categoryBox = document.querySelector('#nxCategories')
 
 
-  const modal = document.querySelector('#appModal')
+  const uniqueCategories = [
+    ...new Set(apps.map(getCategory))
+  ]
 
-  const modalContent = document.querySelector('#modalContent')
 
+  categoryBox.innerHTML = `
+    <button
+      class="nx-category active"
+      data-category="All Apps"
+    >
+      All Apps
+    </button>
 
-  let apps = []
 
-  let selectedCategory = 'All Apps'
-
-
-  // ==========================================
-  // LOAD PUBLISHED APPS FROM SUPABASE
-  // ==========================================
-
-  async function loadApps() {
-
-
-    appGrid.innerHTML = `
-      <p class="empty-state">
-        Loading applications...
-      </p>
-    `
-
-
-    emptyState.hidden = true
-
-
-    const [appsResult, categoriesResult, versionsResult] =
-      await Promise.all([
-
-
-        supabase
-          .from('apps')
-          .select('*')
-          .eq('status', 'published')
-          .order('created_at', { ascending: false }),
-
-
-        supabase
-          .from('categories')
-          .select('*'),
-
-
-        supabase
-          .from('app_versions')
-          .select('*')
-          .eq('status', 'published')
-          .order('version_code', { ascending: false })
-
-
-      ])
-
-
-    // Apps query error
-
-    if (appsResult.error) {
-
-
-      console.error(
-        'Apps loading error:',
-        appsResult.error
-      )
-
-
-      appGrid.innerHTML = ''
-
-
-      emptyState.textContent =
-        'Unable to load applications. Please try again.'
-
-
-      emptyState.hidden = false
-
-
-      return
-
-    }
-
-
-    const databaseApps = appsResult.data || []
-
-    const databaseCategories = categoriesResult.data || []
-
-    const databaseVersions = versionsResult.data || []
-
-
-    if (categoriesResult.error) {
-
-      console.warn(
-        'Categories loading warning:',
-        categoriesResult.error
-      )
-
-    }
-
-
-    if (versionsResult.error) {
-
-      console.warn(
-        'Versions loading warning:',
-        versionsResult.error
-      )
-
-    }
-
-
-    // ==========================================
-    // CATEGORY LOOKUP
-    // ==========================================
-
-    const categoryMap = {}
-
-
-    databaseCategories.forEach(category => {
-
-
-      const categoryName =
-        category.name ||
-        category.category_name ||
-        category.title ||
-        category.slug ||
-        'Other'
-
-
-      categoryMap[String(category.id)] = categoryName
-
-
-    })
-
-
-    // ==========================================
-    // LATEST VERSION LOOKUP
-    // ==========================================
-
-    const versionMap = {}
-
-
-    databaseVersions.forEach(version => {
-
-
-      const appId = String(version.app_id)
-
-
-      if (!versionMap[appId]) {
-
-        versionMap[appId] = version
-
-      }
-
-
-    })
-
-
-    // ==========================================
-    // PREPARE APPS
-    // ==========================================
-
-    apps = databaseApps.map(app => {
-
-
-      const category =
-        categoryMap[String(app.category_id)] ||
-        app.category_name ||
-        'Other'
-
-
-      const latestVersion =
-        versionMap[String(app.id)] || null
-
-
-      return {
-
-        ...app,
-
-        category,
-
-        icon: getInitials(app.name),
-
-        version: latestVersion
-          ? latestVersion.version_name
-          : 'Not released',
-
-        latestVersion
-
-      }
-
-
-    })
-
-
-    // ==========================================
-    // DYNAMIC CATEGORY FILTERS
-    // ==========================================
-
-    const uniqueCategories = [
-      ...new Set(apps.map(app => app.category))
-    ]
-
-
-    categoryList.innerHTML = `
-
+    ${uniqueCategories.map(category => `
       <button
-        class="category-btn active"
-        data-category="All Apps">
-
-        All Apps
-
+        class="nx-category"
+        data-category="${escapeHTML(category)}"
+      >
+        ${escapeHTML(category)}
       </button>
+    `).join('')}
+  `
 
 
-      ${uniqueCategories.map(category => `
+  search.addEventListener('input', renderSearch)
 
-        <button
-          class="category-btn"
-          data-category="${escapeHTML(category)}">
 
-          ${escapeHTML(category)}
-
-        </button>
-
-      `).join('')}
-
-    `
-
-
-    selectedCategory = 'All Apps'
-
-
-    renderApps()
-
-
-    console.log(
-      'IBRAHIMRAJ LIVE APPS LOADED:',
-      apps.length
-    )
-
-
-  }
-
-
-  // ==========================================
-  // RENDER APPLICATIONS
-  // ==========================================
-
-  function renderApps() {
-
-
-    const query = searchInput.value
-      .toLowerCase()
-      .trim()
-
-
-    const filteredApps = apps.filter(app => {
-
-
-      const matchesSearch =
-
-        String(app.name || '')
-          .toLowerCase()
-          .includes(query) ||
-
-
-        String(app.category || '')
-          .toLowerCase()
-          .includes(query) ||
-
-
-        String(app.description || '')
-          .toLowerCase()
-          .includes(query)
-
-
-      const matchesCategory =
-
-        selectedCategory === 'All Apps' ||
-        app.category === selectedCategory
-
-
-      return matchesSearch && matchesCategory
-
-
-    })
-
-
-    appGrid.innerHTML = filteredApps.map(app => {
-
-
-      const iconURL = safeURL(app.icon_url)
-
-
-      const iconHTML = iconURL
-
-        ? `<img
-             src="${escapeHTML(iconURL)}"
-             alt="${escapeHTML(app.name)}"
-             class="app-icon-image"
-             onerror="this.style.display='none'">`
-
-        : escapeHTML(app.icon)
-
-
-      return `
-
-
-        <article class="app-card">
-
-
-          <div class="card-top">
-
-
-            <div class="app-icon">
-              ${iconHTML}
-            </div>
-
-
-            <span class="app-status">
-              AVAILABLE
-            </span>
-
-
-          </div>
-
-
-          <span class="category-label">
-            ${escapeHTML(app.category)}
-          </span>
-
-
-          <h3>
-            ${escapeHTML(app.name)}
-          </h3>
-
-
-          <p>
-            ${escapeHTML(app.description || '')}
-          </p>
-
-
-          <div class="card-bottom">
-
-
-            <span>
-
-              ${app.latestVersion
-                ? 'v' + escapeHTML(app.version)
-                : 'No release yet'}
-
-            </span>
-
-
-            <button
-              class="details-btn"
-              data-id="${escapeHTML(app.id)}">
-
-              Details ↗
-
-            </button>
-
-
-          </div>
-
-
-        </article>
-
-
-      `
-
-
-    }).join('')
-
-
-    emptyState.hidden = filteredApps.length > 0
-
-
-  }
-
-
-  // ==========================================
-  // SEARCH
-  // ==========================================
-
-  searchInput.addEventListener('input', renderApps)
-
-
-  // ==========================================
-  // CATEGORY FILTER
-  // ==========================================
-
-  categoryList.addEventListener('click', event => {
-
-
-    const button = event.target.closest('.category-btn')
+  categoryBox.addEventListener('click', event => {
+    const button = event.target.closest('.nx-category')
 
 
     if (!button) return
@@ -762,214 +556,314 @@ if (window.location.pathname === '/admin/categories') {
     selectedCategory = button.dataset.category
 
 
-    categoryList.querySelectorAll('.category-btn')
-      .forEach(btn => btn.classList.remove('active'))
+    categoryBox.querySelectorAll('.nx-category')
+      .forEach(item => item.classList.remove('active'))
 
 
     button.classList.add('active')
 
 
-    renderApps()
+    renderSearch()
+  })
+}
 
 
+// ==========================================
+// SEARCH + CATEGORY FILTER
+// ==========================================
+
+
+function renderSearch() {
+  const query = document.querySelector('#nxSearch')
+    .value.toLowerCase().trim()
+
+
+  const results = apps.filter(app => {
+    const matchesText =
+      String(app.name || '').toLowerCase().includes(query) ||
+      String(app.description || '').toLowerCase().includes(query) ||
+      getCategory(app).toLowerCase().includes(query)
+
+
+    const matchesCategory =
+      selectedCategory === 'All Apps' ||
+      getCategory(app) === selectedCategory
+
+
+    return matchesText && matchesCategory
   })
 
 
-  // ==========================================
-  // APP DETAILS MODAL
-  // ==========================================
-
-  appGrid.addEventListener('click', event => {
+  const searchResults = document.querySelector('#nxSearchResults')
+  const collections = document.querySelector('#nxCollections')
 
 
-    const button = event.target.closest('.details-btn')
+  if (query || selectedCategory !== 'All Apps') {
+    searchResults.hidden = false
+    collections.hidden = true
+  } else {
+    searchResults.hidden = true
+    collections.hidden = false
+  }
 
 
-    if (!button) return
+  document.querySelector('#nxSearchGrid').innerHTML =
+    results.map(renderAppCard).join('')
 
 
-    const app = apps.find(item =>
-      String(item.id) === button.dataset.id
-    )
+  document.querySelector('#nxSearchEmpty').hidden =
+    results.length > 0
+}
 
 
-    if (!app) return
+// ==========================================
+// APP DETAILS PAGE
+// URL: ?app=APP-SLUG
+// ==========================================
 
 
-    const version = app.latestVersion
+function renderDetails(app) {
+  const appVersions = getAppVersions(app.id)
+  const version = appVersions[0] || null
+  const olderVersions = appVersions.slice(1)
+  const category = getCategory(app)
 
+  const versionName = version
+    ? version.version_name || 'Unknown'
+    : 'Not released'
 
-    const downloadURL = version
-      ? safeURL(version.apk_object_key)
-      : ''
+  const latestPublishDate = version
+    ? formatPublishDate(version.released_at)
+    : 'Not published'
 
+  const latestDownloadURL = version
+    ? safeURL(version.apk_object_key)
+    : ''
 
-    const iconURL = safeURL(app.icon_url)
-
-
-    const iconHTML = iconURL
-
-      ? `<img
-           src="${escapeHTML(iconURL)}"
-           class="modal-app-image"
-           alt="${escapeHTML(app.name)}">`
-
-      : `<div class="modal-icon">
-           ${escapeHTML(app.icon)}
-         </div>`
-
-
-    modalContent.innerHTML = `
-
-
-      ${iconHTML}
-
-
-      <span class="eyebrow">
-        ${escapeHTML(app.category)}
-      </span>
-
-
-      <h2>
-        ${escapeHTML(app.name)}
-      </h2>
-
-
-      <p>
-        ${escapeHTML(app.description || '')}
+  const latestDownloadButton = version && latestDownloadURL
+    ? `
+      <button
+        class="nx-primary-button nx-download-button"
+        data-app-id="${escapeHTML(app.id)}"
+        data-version-id="${escapeHTML(version.id)}"
+        data-url="${escapeHTML(latestDownloadURL)}"
+      >
+        Download Latest APK ↓
+      </button>
+    `
+    : `
+      <p class="nx-notice">
+        No published APK version is available yet.
       </p>
-
-
-      <div class="modal-version">
-
-
-        <p>
-
-          <strong>Version:</strong>
-
-          ${version
-            ? 'v' + escapeHTML(version.version_name)
-            : 'Not released'}
-
-        </p>
-
-
-        ${version ? `
-
-          <p>
-
-            <strong>Minimum Android:</strong>
-
-            ${escapeHTML(
-              version.min_android_version || 'Not specified'
-            )}
-
-          </p>
-
-        ` : ''}
-
-
-      </div>
-
-
-      ${version && version.changelog ? `
-
-        <div class="modal-changelog">
-
-          <h3>What's New</h3>
-
-          <p>
-            ${escapeHTML(version.changelog)}
-          </p>
-
-        </div>
-
-      ` : ''}
-
-
-      ${downloadURL ? `
-
-
-        <button
-          type="button"
-          class="primary-button download-button"
-          data-download-app-id="${escapeHTML(app.id)}"
-          data-download-version-id="${escapeHTML(version.id)}"
-          data-download-url="${escapeHTML(downloadURL)}">
-
-          Download APK ↓
-
-        </button>
-
-
-      ` : `
-
-
-        <p class="modal-note">
-
-          No published APK version is available yet.
-          Please check back for future releases.
-
-        </p>
-
-
-      `}
-
-
     `
 
+  const olderVersionsHTML = olderVersions.length
+    ? olderVersions.map(oldVersion => {
+        const oldDownloadURL = safeURL(oldVersion.apk_object_key)
 
-    modal.hidden = false
+        return `
+          <article class="nx-version-item">
+            <div class="nx-version-info">
+              <strong>Version ${escapeHTML(oldVersion.version_name || 'Unknown')}</strong>
+              <span>Published: ${escapeHTML(formatPublishDate(oldVersion.released_at))}</span>
+              <span>Minimum Android: ${escapeHTML(oldVersion.min_android_version || 'Not specified')}</span>
+              ${oldVersion.changelog ? `
+                <p>${escapeHTML(oldVersion.changelog)}</p>
+              ` : ''}
+            </div>
+
+            ${oldDownloadURL ? `
+              <button
+                type="button"
+                class="nx-secondary-download nx-download-button"
+                data-app-id="${escapeHTML(app.id)}"
+                data-version-id="${escapeHTML(oldVersion.id)}"
+                data-url="${escapeHTML(oldDownloadURL)}"
+              >
+                Download ↓
+              </button>
+            ` : `
+              <span class="nx-version-unavailable">Unavailable</span>
+            `}
+          </article>
+        `
+      }).join('')
+    : `
+      <p class="nx-version-empty">
+        No older versions are available yet.
+      </p>
+    `
+
+  root.innerHTML = `
+    ${renderHeader()}
+
+    <main class="nx-details-page">
+      <a href="/" class="nx-back-link">
+        ← Back to APPNEXA
+      </a>
+
+      <section class="nx-details-hero">
+        <div class="nx-details-icon">
+          ${getIcon(app)}
+        </div>
+
+        <div class="nx-details-heading">
+          <span class="nx-eyebrow">
+            ${escapeHTML(category)}
+          </span>
+
+          <h1>${escapeHTML(app.name)}</h1>
+
+          <p>
+            ${escapeHTML(app.developer_name || OWNER)}
+          </p>
+
+          <div class="nx-details-meta">
+            <span>Latest: ${escapeHTML(versionName)}</span>
+            <span>Android Application</span>
+          </div>
+
+          ${latestDownloadButton}
+        </div>
+      </section>
+
+      <section class="nx-details-section nx-latest-version">
+        <div class="nx-version-section-heading">
+          <div>
+            <span class="nx-eyebrow">LATEST RELEASE</span>
+            <h2>Latest Update</h2>
+          </div>
+          <span class="nx-latest-badge">LATEST</span>
+        </div>
+
+        ${version ? `
+          <div class="nx-latest-version-card">
+            <div class="nx-latest-version-top">
+              <strong>Version ${escapeHTML(version.version_name || 'Unknown')}</strong>
+              <span>Published ${escapeHTML(latestPublishDate)}</span>
+            </div>
+
+            <div class="nx-latest-version-meta">
+              <span>Version Code: ${escapeHTML(version.version_code ?? '—')}</span>
+              <span>Minimum Android: ${escapeHTML(version.min_android_version || 'Not specified')}</span>
+            </div>
+
+            ${version.changelog ? `
+              <div class="nx-latest-changelog">
+                <h3>What's New</h3>
+                <p>${escapeHTML(version.changelog)}</p>
+              </div>
+            ` : ''}
+          </div>
+        ` : `
+          <p class="nx-version-empty">
+            This app has not published a version yet.
+          </p>
+        `}
+      </section>
+
+      <section class="nx-details-section">
+        <h2>About this app</h2>
+        <p class="nx-description">
+          ${escapeHTML(app.description || 'No description available.')}
+        </p>
+      </section>
+
+      <section class="nx-details-section">
+        <h2>Application Information</h2>
+
+        <div class="nx-info-grid">
+          <div>
+            <span>App Name</span>
+            <strong>${escapeHTML(app.name)}</strong>
+          </div>
+
+          <div>
+            <span>Developer</span>
+            <strong>${escapeHTML(app.developer_name || OWNER)}</strong>
+          </div>
+
+          <div>
+            <span>Category</span>
+            <strong>${escapeHTML(category)}</strong>
+          </div>
+
+          <div>
+            <span>Latest Version</span>
+            <strong>${escapeHTML(versionName)}</strong>
+          </div>
+
+          <div>
+            <span>Package Name</span>
+            <strong>${escapeHTML(app.package_name || 'Not specified')}</strong>
+          </div>
+
+          <div>
+            <span>Minimum Android</span>
+            <strong>
+              ${escapeHTML(version?.min_android_version || 'Not specified')}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="nx-details-section nx-version-history">
+        <div class="nx-version-section-heading">
+          <div>
+            <span class="nx-eyebrow">RELEASE ARCHIVE</span>
+            <h2>Older Versions</h2>
+            <p class="nx-version-subtitle">
+              Download a previous release of this application.
+            </p>
+          </div>
+          <span class="nx-version-count">${olderVersions.length} ${olderVersions.length === 1 ? 'version' : 'versions'}</span>
+        </div>
+
+        <div class="nx-version-list">
+          ${olderVersionsHTML}
+        </div>
+      </section>
+    </main>
+
+    ${renderFooter()}
+  `
+
+  setupDownloadEvent()
+}
 
 
-  })
+// ==========================================
+// DOWNLOAD + TRACKING — ALL VERSIONS
+// ==========================================
 
 
-  // ==========================================
-  // APK DOWNLOAD + DOWNLOAD TRACKING
-  // ==========================================
+function setupDownloadEvent() {
+  const detailsPage = document.querySelector('.nx-details-page')
 
-  modalContent.addEventListener('click', async event => {
+  if (!detailsPage) return
 
-
-    const button = event.target.closest('.download-button')
-
+  detailsPage.addEventListener('click', async event => {
+    const button = event.target.closest('.nx-download-button')
 
     if (!button) return
 
-
-    const appId = button.dataset.downloadAppId
-
-    const versionId = button.dataset.downloadVersionId
-
-    const downloadURL = safeURL(button.dataset.downloadUrl)
-
+    const appId = button.dataset.appId
+    const versionId = button.dataset.versionId
+    const downloadURL = safeURL(button.dataset.url)
 
     if (!appId || !versionId || !downloadURL) {
-
-      alert(
-        'Download information is unavailable. Please try again.'
-      )
-
+      alert('Download information is unavailable.')
       return
-
     }
-
 
     if (button.disabled) return
 
-
     const originalText = button.textContent
 
-
     button.disabled = true
-
-    button.textContent = 'Preparing download...'
-
+    button.textContent = 'Preparing...'
 
     try {
-
-
       const { error } = await supabase.rpc(
         'record_app_download',
         {
@@ -978,116 +872,103 @@ if (window.location.pathname === '/admin/categories') {
         }
       )
 
-
       if (error) {
-
-        // Keep the APK accessible even if tracking temporarily fails.
-
-        console.error(
-          'Download tracking error:',
-          error
-        )
-
-
+        console.error('Download tracking error:', error)
         alert(
           'Download tracking could not be saved, but your download will continue.'
         )
-
       }
-
 
       window.location.href = downloadURL
 
-
     } catch (error) {
-
-
-      console.error(
-        'Download process error:',
-        error
-      )
-
-
-      alert(
-        'Something went wrong while preparing the download. Please try again.'
-      )
-
-
+      console.error('Download error:', error)
+      alert('Something went wrong. Please try again.')
       button.disabled = false
-
       button.textContent = originalText
-
-
     }
-
-
   })
+}
 
 
-  // ==========================================
-  // MODAL CLOSE
-  // ==========================================
-
-  document.querySelector('#closeModal')
-    .addEventListener('click', () => {
+// ==========================================
+// PAGE ROUTER
+// ==========================================
 
 
-      modal.hidden = true
+async function startStore() {
+  root.innerHTML = `
+    <div class="nx-loading">
+      <div class="nx-loading-icon">A</div>
+      <p>Loading APPNEXA...</p>
+    </div>
+  `
 
 
-    })
+  await loadStoreData()
 
 
-  modal.addEventListener('click', event => {
+  const params = new URLSearchParams(window.location.search)
+  const appSlug = params.get('app')
 
 
-    if (event.target === modal) {
-
-      modal.hidden = true
-
-    }
-
-
-  })
-
-
-  document.addEventListener('keydown', event => {
-
-
-    if (event.key === 'Escape') {
-
-      modal.hidden = true
-
-    }
-
-
-  })
-
-
-  // ==========================================
-  // START APPLICATION
-  // ==========================================
-
-  loadApps().catch(error => {
-
-
-    console.error(
-      'Store initialization error:',
-      error
+  if (appSlug) {
+    const selectedApp = apps.find(app =>
+      String(app.slug || app.id) === appSlug ||
+      String(app.id) === appSlug
     )
 
 
-    appGrid.innerHTML = ''
+    if (selectedApp) {
+      renderDetails(selectedApp)
+      return
+    }
 
 
-    emptyState.textContent =
-      'Something went wrong. Please refresh the page.'
+    root.innerHTML = `
+      ${renderHeader()}
 
 
-    emptyState.hidden = false
+      <main class="nx-not-found">
+        <h1>App not found</h1>
+        <p>This application may have been removed or is unavailable.</p>
+        <a href="/" class="nx-primary-button">
+          Back to APPNEXA
+        </a>
+      </main>
 
 
-  })
+      ${renderFooter()}
+    `
+
+
+    return
+  }
+
+
+  renderHome()
+}
+
+
+// ==========================================
+// INITIALIZE
+// ==========================================
+
+
+startStore().catch(error => {
+  console.error('APPNEXA initialization error:', error)
+
+
+  root.innerHTML = `
+    <main class="nx-error">
+      <h2>Something went wrong</h2>
+      <p>Unable to load APPNEXA. Please refresh the page.</p>
+      <button onclick="location.reload()">
+        Try Again
+      </button>
+    </main>
+  `
+})
 
 
 }
