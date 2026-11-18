@@ -1196,3 +1196,832 @@ img {
     font-size: 19px;
   }
 }
+
+/* ==========================================
+   APPNEXA AUTHENTICATION
+========================================== */
+
+.nx-auth-page {
+  min-height: 100vh;
+  padding: 35px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: #080d0b;
+}
+
+.nx-auth-glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #b6ff5c0c;
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.nx-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+  z-index: 1;
+}
+
+.nx-auth-brand > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nx-auth-brand strong {
+  font-size: 19px;
+  letter-spacing: -.5px;
+}
+
+.nx-auth-brand small {
+  color: #91a196;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+
+.nx-auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 35px;
+  position: relative;
+  z-index: 1;
+  background: #111a14;
+  border: 1px solid #29382e;
+  border-radius: 20px;
+  box-shadow: 0 25px 80px #0007;
+}
+
+.nx-auth-logo {
+  width: 55px;
+  height: 55px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 25px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #b6ff5c, #397e27);
+  color: #080d0b;
+  font-size: 27px;
+  font-weight: 950;
+}
+
+.nx-auth-card h1 {
+  font-size: 30px;
+  margin: 12px 0 8px;
+  letter-spacing: -1px;
+}
+
+.nx-auth-subtitle {
+  color: #9eafa2;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 27px;
+}
+
+.nx-auth-card label {
+  display: block;
+  color: #c7d4ca;
+  font-size: 11px;
+  font-weight: 700;
+  margin: 17px 0 8px;
+}
+
+.nx-auth-card input {
+  width: 100%;
+  height: 47px;
+  padding: 0 14px;
+  outline: none;
+  color: white;
+  background: #080d0b;
+  border: 1px solid #29382e;
+  border-radius: 9px;
+  font-size: 12px;
+  transition: .2s;
+}
+
+.nx-auth-card input:focus {
+  border-color: #b6ff5c;
+  box-shadow: 0 0 0 3px #b6ff5c12;
+}
+
+.nx-auth-card input::placeholder {
+  color: #718076;
+}
+
+.nx-auth-forgot {
+  display: block;
+  margin: 13px 0 20px auto;
+  background: transparent;
+  border: none;
+  color: #b6ff5c;
+  font-size: 11px;
+}
+
+.nx-auth-submit {
+  width: 100%;
+  height: 48px;
+  margin-top: 24px;
+  border: none;
+  border-radius: 9px;
+  background: #b6ff5c;
+  color: #080d0b;
+  font-size: 12px;
+  font-weight: 900;
+  transition: .2s;
+}
+
+.nx-auth-submit:hover {
+  background: #caff91;
+  transform: translateY(-2px);
+}
+
+.nx-auth-submit:disabled,
+.nx-google-button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.nx-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 23px 0;
+  color: #84958a;
+  font-size: 10px;
+}
+
+.nx-auth-divider span {
+  flex: 1;
+  height: 1px;
+  background: #29382e;
+}
+
+.nx-google-button {
+  width: 100%;
+  height: 47px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid #35483a;
+  border-radius: 9px;
+  background: #18231b;
+  color: white;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.nx-google-button:hover {
+  border-color: #b6ff5c;
+}
+
+.nx-google-icon {
+  font-size: 19px;
+  font-weight: 900;
+  color: #b6ff5c;
+}
+
+.nx-auth-switch {
+  margin-top: 25px;
+  text-align: center;
+  color: #9eafa2;
+  font-size: 11px;
+}
+
+.nx-auth-switch button,
+.nx-auth-back {
+  background: transparent;
+  border: none;
+  color: #b6ff5c;
+  font-weight: 800;
+  margin-left: 5px;
+}
+
+.nx-auth-back {
+  display: block;
+  margin: 20px auto 0;
+  font-size: 12px;
+}
+
+.nx-auth-message {
+  padding: 12px;
+  margin-bottom: 18px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.nx-auth-message.error {
+  color: #ffaaaa;
+  background: #ff444414;
+  border: 1px solid #ff444440;
+}
+
+.nx-auth-message.success {
+  color: #b6ff5c;
+  background: #b6ff5c12;
+  border: 1px solid #b6ff5c40;
+}
+
+.nx-auth-footer {
+  color: #718076;
+  font-size: 10px;
+  margin-top: 25px;
+  z-index: 1;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .nx-auth-page {
+    padding: 25px 15px;
+  }
+
+  .nx-auth-card {
+    padding: 25px 21px;
+  }
+
+  .nx-auth-card h1 {
+    font-size: 26px;
+  }
+}
+
+/* ==========================================
+   APPNEXA DOWNLOAD LOGIN MODAL
+========================================== */
+
+.nx-download-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .78);
+  backdrop-filter: blur(10px);
+}
+
+.nx-download-modal-card {
+  width: 100%;
+  max-width: 430px;
+  padding: 35px 28px;
+  position: relative;
+  text-align: center;
+  background: #111a14;
+  border: 1px solid #354b35;
+  border-radius: 20px;
+  box-shadow: 0 25px 90px #0009;
+  animation: nxModalAppear .25s ease;
+}
+
+@keyframes nxModalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.nx-modal-close {
+  position: absolute;
+  top: 13px;
+  right: 17px;
+  background: transparent;
+  border: none;
+  color: #9eafa2;
+  font-size: 25px;
+}
+
+.nx-modal-icon {
+  width: 65px;
+  height: 65px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 22px;
+  border-radius: 19px;
+  background: linear-gradient(145deg, #b6ff5c, #397e27);
+  color: #080d0b;
+  font-size: 32px;
+  font-weight: 950;
+  box-shadow: 0 0 35px #b6ff5c25;
+}
+
+.nx-download-modal-card h2 {
+  margin: 13px 0 9px;
+  font-size: 25px;
+}
+
+.nx-download-modal-card h3 {
+  color: #b6ff5c;
+  font-size: 15px;
+  margin-bottom: 13px;
+}
+
+.nx-download-modal-card p {
+  color: #a9b9ae;
+  font-size: 12px;
+  line-height: 1.8;
+  margin-bottom: 23px;
+}
+
+.nx-modal-login {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 9px;
+  background: #b6ff5c;
+  color: #080d0b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nx-modal-login:hover {
+  background: #caff91;
+}
+
+.nx-modal-later {
+  display: block;
+  margin: 17px auto 0;
+  border: none;
+  background: transparent;
+  color: #9eafa2;
+  font-size: 11px;
+}
+
+.nx-modal-later:hover {
+  color: white;
+}
+
+/* APPNEXA HEADER AUTH */
+.nx-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nx-header-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 17px;
+  border-radius: 9px;
+  background: #b6ff5c;
+  color: #080d0b;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: .2s ease;
+}
+
+.nx-header-button:hover {
+  background: #caff91;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+  .nx-header-actions .nx-header-button {
+    padding: 9px 11px;
+    font-size: 10px;
+  }
+}
+
+/* ==========================================
+   APPNEXA USER PROFILE HEADER
+========================================== */
+
+.nx-profile-menu {
+  position: relative;
+}
+
+.nx-profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  border: 1px solid #29382E;
+  border-radius: 12px;
+  background: #111A14;
+  color: #E8EEE9;
+  cursor: pointer;
+}
+
+.nx-profile-trigger img,
+.nx-profile-trigger > span:first-child {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.nx-profile-trigger > span:first-child {
+  display: grid;
+  place-items: center;
+  background: #B6FF5C;
+  color: #080D0B;
+  font-weight: 800;
+}
+
+.nx-profile-name {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.nx-profile-arrow {
+  color: #B6FF5C;
+}
+
+.nx-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 1000;
+  width: 235px;
+  padding: 10px;
+  border: 1px solid #29382E;
+  border-radius: 15px;
+  background: #111A14;
+  box-shadow: 0 15px 45px #0008;
+}
+
+.nx-profile-dropdown[hidden] {
+  display: none;
+}
+
+.nx-profile-dropdown-user {
+  padding: 12px;
+  border-bottom: 1px solid #29382E;
+  margin-bottom: 7px;
+}
+
+.nx-profile-dropdown-user strong,
+.nx-profile-dropdown-user small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.nx-profile-dropdown-user strong {
+  color: #E8EEE9;
+  font-size: 14px;
+}
+
+.nx-profile-dropdown-user small {
+  margin-top: 5px;
+  color: #91A095;
+  font-size: 11px;
+}
+
+.nx-profile-dropdown a,
+.nx-profile-dropdown > button {
+  display: block;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #E8EEE9;
+  text-align: left;
+  text-decoration: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.nx-profile-dropdown a:hover,
+.nx-profile-dropdown > button:hover {
+  background: #1D2B20;
+  color: #B6FF5C;
+}
+
+.nx-profile-dropdown > button {
+  color: #FF8C8C;
+  border-top: 1px solid #29382E;
+  margin-top: 5px;
+}
+
+@media (max-width: 600px) {
+  .nx-profile-name {
+    display: none;
+  }
+}
+
+/* ==========================================
+   APPNEXA PREMIUM USER PROFILE
+========================================== */
+
+.nx-profile-page {
+  width: min(100% - 36px, 1050px);
+  margin: 55px auto 90px;
+  min-height: 65vh;
+}
+
+.nx-profile-heading {
+  margin-bottom: 30px;
+}
+
+.nx-profile-heading h1 {
+  margin-top: 10px;
+  color: #E8EEE9;
+  font-size: clamp(30px, 5vw, 42px);
+  letter-spacing: -1.5px;
+}
+
+.nx-profile-heading p {
+  margin-top: 9px;
+  color: #91A095;
+  font-size: 14px;
+}
+
+.nx-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid #29382E;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #142019, #0D140F);
+}
+
+.nx-profile-avatar {
+  width: 90px;
+  height: 90px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 3px solid #B6FF5C;
+  background: #B6FF5C;
+  color: #080D0B;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.nx-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nx-profile-user-info h2 {
+  color: #E8EEE9;
+  font-size: 23px;
+  overflow-wrap: anywhere;
+}
+
+.nx-profile-user-info p {
+  margin-top: 7px;
+  color: #91A095;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.nx-profile-member {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #263A24;
+  color: #B6FF5C;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.nx-profile-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 30px 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #29382E;
+  overflow-x: auto;
+}
+
+.nx-profile-tabs button {
+  padding: 11px 17px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #91A095;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nx-profile-tabs button:hover {
+  color: #E8EEE9;
+  background: #142019;
+}
+
+.nx-profile-tabs button.active {
+  background: #B6FF5C;
+  color: #080D0B;
+}
+
+.nx-profile-content {
+  min-height: 280px;
+}
+
+.nx-profile-section {
+  padding: 28px;
+  border: 1px solid #29382E;
+  border-radius: 18px;
+  background: #111A14;
+}
+
+.nx-profile-section > h2 {
+  margin-bottom: 25px;
+  color: #E8EEE9;
+  font-size: 21px;
+}
+
+.nx-profile-section > p {
+  margin-top: -15px;
+  margin-bottom: 20px;
+  color: #91A095;
+  font-size: 13px;
+}
+
+.nx-profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.nx-profile-info-grid > div {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid #29382E;
+  border-radius: 11px;
+  background: #0B120D;
+}
+
+.nx-profile-info-grid span {
+  display: block;
+  margin-bottom: 9px;
+  color: #91A095;
+  font-size: 12px;
+}
+
+.nx-profile-info-grid strong {
+  display: block;
+  color: #E8EEE9;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.nx-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.nx-profile-actions button {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.nx-profile-logout {
+  padding: 0 20px;
+  border: 1px solid #633737;
+  border-radius: 9px;
+  background: #251515;
+  color: #FF8C8C;
+  font-weight: 700;
+}
+
+.nx-profile-logout:hover {
+  background: #3A1D1D;
+}
+
+.nx-edit-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 25px;
+  padding: 22px;
+  border: 1px solid #29382E;
+  border-radius: 12px;
+  background: #0B120D;
+}
+
+.nx-edit-form h3 {
+  margin-bottom: 5px;
+  color: #E8EEE9;
+}
+
+.nx-edit-form label {
+  color: #91A095;
+  font-size: 13px;
+}
+
+.nx-edit-form input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #29382E;
+  border-radius: 9px;
+  outline: none;
+  background: #111A14;
+  color: #E8EEE9;
+}
+
+.nx-edit-form input:focus {
+  border-color: #B6FF5C;
+}
+
+.nx-edit-form button {
+  justify-self: start;
+  cursor: pointer;
+}
+
+#nxEditMessage {
+  margin: 0;
+  color: #B6FF5C;
+  font-size: 13px;
+}
+
+.nx-profile-empty {
+  padding: 35px 20px;
+  text-align: center;
+  border: 1px dashed #29382E;
+  border-radius: 13px;
+  background: #0B120D;
+}
+
+.nx-profile-empty > span {
+  display: block;
+  margin-bottom: 12px;
+  color: #B6FF5C;
+  font-size: 35px;
+}
+
+.nx-profile-empty h3 {
+  color: #E8EEE9;
+  font-size: 18px;
+}
+
+.nx-profile-empty p {
+  margin: 10px 0 20px;
+  color: #91A095;
+  font-size: 13px;
+}
+
+.nx-profile-empty .nx-primary-button {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .nx-profile-page {
+    width: calc(100% - 24px);
+    margin-top: 30px;
+  }
+
+  .nx-profile-card {
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .nx-profile-avatar {
+    width: 65px;
+    height: 65px;
+    font-size: 25px;
+  }
+
+  .nx-profile-user-info h2 {
+    font-size: 17px;
+  }
+
+  .nx-profile-user-info p {
+    font-size: 11px;
+  }
+
+  .nx-profile-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nx-profile-section {
+    padding: 18px;
+  }
+
+  .nx-profile-tabs button {
+    padding: 10px 13px;
+  }
+}
